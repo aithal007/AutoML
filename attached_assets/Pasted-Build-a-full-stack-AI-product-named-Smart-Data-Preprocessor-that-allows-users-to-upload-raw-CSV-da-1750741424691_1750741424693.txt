@@ -1,0 +1,92 @@
+Build a full-stack AI product named "Smart Data Preprocessor" that allows users to upload raw CSV datasets and automatically performs detailed machine learning preprocessing. This product should be structured with separate Python files, a clean backend API, and a simple web frontend for interaction.
+
+🎯 Core Features:
+Let the user upload a CSV file from the frontend.
+
+On upload, the backend should:
+
+Automatically detect and classify columns as numerical, categorical, datetime, or constant.
+
+Drop constant columns.
+
+Impute missing values:
+
+Numerical → mean
+
+Categorical → most frequent
+
+Scale numerical columns using StandardScaler.
+
+Encode categorical columns using OneHotEncoder.
+
+Output:
+
+Processed data preview (top 10 rows)
+
+Column type summary
+
+Features dropped
+
+Download link for full processed CSV
+
+🧠 Python Files & Structure
+1. automl_engine.py
+
+Contains a class DataCleaner that:
+
+Identifies column types
+
+Drops constant columns
+
+Creates preprocessing pipeline (with ColumnTransformer)
+
+Has fit_transform() and transform() methods
+
+Saves feature_names_out
+
+2. app.py (Flask backend)
+
+Exposes endpoints:
+
+/upload: to receive and save the CSV
+
+/preprocess: runs the cleaner and returns JSON preview + metadata
+
+/download: returns processed CSV as downloadable
+
+🌐 Frontend (HTML + CSS + JS or JavaFX)
+Simple UI with:
+
+File upload input
+
+Target column dropdown (optional)
+
+Button: "Run Preprocessing"
+
+Output:
+
+Preview table of cleaned data (first 10 rows)
+
+Text showing column types
+
+List of columns dropped (e.g., constant features)
+
+Button: "Download Full Processed Dataset"
+
+📦 Tech Constraints
+Logic must be in Python (automl_engine.py) only
+
+Use Flask for backend
+
+Use Pandas + Scikit-learn only (no AutoML libraries like TPOT, H2O, etc.)
+
+Keep frontend minimal, just for interaction (no React, Vue, etc.)
+
+💡 Bonus Features (optional)
+Add outlier detection (e.g., IQR method)
+
+Add datetime handling (split into day, month, year if datetime is detected)
+
+Show logs or summary report to user in a side panel
+
+Optionally let user choose imputation/scaling strategies
