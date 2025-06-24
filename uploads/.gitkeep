@@ -1,0 +1,2 @@
+# This file ensures the uploads directory exists in version control
+# Uploaded CSV files will be stored here temporarily

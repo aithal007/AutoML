@@ -1,0 +1,208 @@
+/* Custom styles for Smart Data Preprocessor */
+
+:root {
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
+
+/* Header styling */
+header {
+    background: linear-gradient(135deg, var(--bs-info) 0%, var(--bs-primary) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+}
+
+/* Card animations */
+.card {
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Button enhancements */
+.btn {
+    transition: all var(--transition-speed);
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* File input styling */
+.form-control:focus {
+    border-color: var(--bs-info);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-info-rgb), 0.25);
+}
+
+/* Table styling */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    background-color: var(--bs-secondary-bg);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.table-responsive {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Alert styling */
+.alert {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.75em;
+    border-radius: 6px;
+}
+
+/* Progress animations */
+.spinner-border {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Fade-in animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Statistics cards */
+.stat-card {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 10px;
+    background: var(--bs-secondary-bg);
+    margin-bottom: 1rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--bs-info);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--bs-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    .d-grid.gap-2.d-md-flex .btn {
+        width: auto;
+        margin-bottom: 0;
+    }
+}
+
+/* Loading state */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Success state */
+.success-glow {
+    box-shadow: 0 0 20px rgba(25, 135, 84, 0.3);
+}
+
+/* Error state */
+.error-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Custom scrollbar */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: var(--bs-secondary-bg);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--bs-secondary);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-info);
+}
+
+/* Feature list styling */
+.feature-list {
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--bs-secondary-bg);
+    padding: 0.75rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.feature-item {
+    display: inline-block;
+    margin: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bs-info);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
