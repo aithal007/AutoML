@@ -76,6 +76,10 @@ def upload_file():
                 os.remove(filepath)
                 return jsonify({'error': 'Uploaded CSV file is empty'}), 400
             
+            # Count NaN stats
+            total_nan = int(df.isna().sum().sum())
+            rows_with_nan = int(df.isna().any(axis=1).sum())
+            
             # Store file information
             current_file_info = {
                 'filename': filename,
@@ -83,7 +87,9 @@ def upload_file():
                 'original_name': file.filename,
                 'rows': len(df),
                 'columns': len(df.columns),
-                'column_names': df.columns.tolist()
+                'column_names': df.columns.tolist(),
+                'total_nan': total_nan,
+                'rows_with_nan': rows_with_nan
             }
             
             logger.info(f"File uploaded successfully: {filename}, Shape: {df.shape}")
@@ -94,7 +100,9 @@ def upload_file():
                 'file_info': {
                     'rows': len(df),
                     'columns': len(df.columns),
-                    'column_names': df.columns.tolist()[:10]  # Show first 10 column names
+                    'column_names': df.columns.tolist()[:10],  # Show first 10 column names
+                    'total_nan': total_nan,
+                    'rows_with_nan': rows_with_nan
                 }
             })
             
@@ -123,12 +131,64 @@ def preprocess_data():
         df = pd.read_csv(current_file_info['filepath'])
         logger.info(f"Starting preprocessing for file: {current_file_info['filename']}")
         
+        # Get NaN handling strategy and column selections from request
+        nan_strategy = request.json.get('nan_strategy') if request.is_json else request.form.get('nan_strategy')
+        if nan_strategy not in ['impute', 'delete']:
+            nan_strategy = 'impute'
+        target_column = request.json.get('target_column') if request.is_json else request.form.get('target_column')
+        serial_column = request.json.get('serial_column') if request.is_json else request.form.get('serial_column')
+        if not target_column or target_column not in df.columns:
+            target_column = None
+        if not serial_column or serial_column not in df.columns:
+            serial_column = None
+        
+        # Remove target and serial columns from features to preprocess
+        feature_cols = df.columns.tolist()
+        exclude_cols = []
+        if target_column:
+            exclude_cols.append(target_column)
+        if serial_column:
+            exclude_cols.append(serial_column)
+        feature_cols = [col for col in feature_cols if col not in exclude_cols]
+        df_features = df[feature_cols]
+
+        # If deleting NaN rows, drop from features, target, and serial columns, and keep all aligned
+        if nan_strategy == 'delete':
+            # Build a DataFrame with all relevant columns for row alignment
+            cols_to_check = feature_cols[:]
+            if target_column:
+                cols_to_check.append(target_column)
+            if serial_column:
+                cols_to_check.append(serial_column)
+            df_all = df[cols_to_check]
+            # Drop rows with any NaN in any relevant column
+            df_all = df_all.dropna()
+            # Split back into features, target, serial
+            df_features = df_all[feature_cols]
+            df_target = df_all[target_column] if target_column else None
+            df_serial = df_all[serial_column] if serial_column else None
+            # After dropping, if no rows remain, return error
+            if len(df_features) == 0:
+                return jsonify({'error': 'All rows were dropped because every row had at least one missing value. Please choose imputation or upload a dataset with fewer missing values.'}), 400
+            # Set nan_strategy to 'impute' for DataCleaner (since we've already deleted NaNs)
+            nan_strategy_for_cleaner = 'impute'
+        else:
+            df_target = df[target_column] if target_column else None
+            df_serial = df[serial_column] if serial_column else None
+            nan_strategy_for_cleaner = nan_strategy
+        
         # Initialize data cleaner and process the data
-        data_cleaner = DataCleaner()
-        X_transformed, feature_names = data_cleaner.fit_transform(df)
+        data_cleaner = DataCleaner(nan_strategy=nan_strategy_for_cleaner)
+        X_transformed, feature_names, nan_stats = data_cleaner.fit_transform(df_features, return_nan_stats=True)
         
         # Convert transformed data back to DataFrame for easier handling
         processed_df = pd.DataFrame(X_transformed, columns=feature_names)
+        
+        # Add back serial and target columns as-is (if present)
+        if serial_column and df_serial is not None:
+            processed_df.insert(0, serial_column, df_serial.values)
+        if target_column and df_target is not None:
+            processed_df[target_column] = df_target.values
         
         # Save processed data
         processed_filename = f"processed_{current_file_info['filename']}"
@@ -151,16 +211,17 @@ def preprocess_data():
             'success': True,
             'message': 'Data preprocessing completed successfully!',
             'preview': {
-                'columns': feature_names,
+                'columns': processed_df.columns.tolist(),
                 'data': preview_dict,
                 'total_rows': len(processed_df)
             },
             'summary': {
                 'original_shape': [current_file_info['rows'], current_file_info['columns']],
-                'processed_shape': [len(processed_df), len(feature_names)],
+                'processed_shape': [len(processed_df), len(processed_df.columns)],
                 'column_types': summary['column_types'],
                 'dropped_columns': summary['dropped_columns'],
-                'preprocessing_stats': summary['preprocessing_summary']
+                'preprocessing_stats': summary['preprocessing_summary'],
+                'nan_stats': nan_stats
             }
         }
         

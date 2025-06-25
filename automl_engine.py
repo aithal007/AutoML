@@ -20,13 +20,14 @@ class DataCleaner:
     - Constant column removal
     """
     
-    def __init__(self):
+    def __init__(self, nan_strategy: str = 'impute'):
         self.preprocessor = None
         self.feature_names_out = None
         self.column_types = {}
         self.dropped_columns = []
         self.preprocessing_summary = {}
         self.original_columns = []
+        self.nan_strategy = nan_strategy
         
     def detect_column_types(self, df: pd.DataFrame) -> Dict[str, List[str]]:
         """
@@ -191,17 +192,37 @@ class DataCleaner:
         logger.info("Preprocessing pipeline created successfully")
         return preprocessor
     
-    def fit_transform(self, df: pd.DataFrame) -> Tuple[np.ndarray, List[str]]:
+    def drop_na_rows(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Drop rows with any NaN values.
+        """
+        logger.info(f"Dropping rows with NaN values. Original shape: {df.shape}")
+        df = df.dropna()
+        logger.info(f"New shape after dropping NaNs: {df.shape}")
+        return df
+    
+    def fit_transform(self, df: pd.DataFrame, return_nan_stats: bool = False) -> Tuple[np.ndarray, List[str], dict]:
         """
         Fit the preprocessing pipeline and transform the data.
         
         Args:
             df: Input DataFrame
-            
+            return_nan_stats: If True, return NaN stats (for UI feedback)
         Returns:
-            Tuple of (transformed_data, feature_names)
+            Tuple of (transformed_data, feature_names, nan_stats) if return_nan_stats else (transformed_data, feature_names)
         """
         logger.info("Starting fit_transform process...")
+        
+        # NaN stats before
+        total_nan = int(df.isna().sum().sum())
+        rows_with_nan = int(df.isna().any(axis=1).sum())
+        orig_rows = len(df)
+        rows_dropped = 0
+        
+        if self.nan_strategy == 'delete':
+            df = self.drop_na_rows(df)
+            rows_dropped = orig_rows - len(df)
+        # else: impute (default) - do nothing, imputation handled in pipeline
         
         # Detect column types
         self.detect_column_types(df)
@@ -239,7 +260,16 @@ class DataCleaner:
         }
         
         logger.info(f"Preprocessing complete. Shape: {X_transformed.shape}")
-        return X_transformed, feature_names
+        nan_stats = {
+            'total_nan': total_nan,
+            'rows_with_nan': rows_with_nan,
+            'rows_dropped': rows_dropped,
+            'nan_strategy': self.nan_strategy
+        }
+        if return_nan_stats:
+            return X_transformed, feature_names, nan_stats
+        else:
+            return X_transformed, feature_names
     
     def transform(self, df: pd.DataFrame) -> np.ndarray:
         """

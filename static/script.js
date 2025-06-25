@@ -83,6 +83,7 @@ class DataPreprocessor {
             if (result.success) {
                 this.showAlert(result.message, 'success');
                 this.displayFileInfo(result.file_info);
+                this.displayNanStats(result.file_info);
                 this.currentState = 'uploaded';
                 document.getElementById('resetBtn').style.display = 'inline-block';
             } else {
@@ -130,7 +131,44 @@ class DataPreprocessor {
             </div>
         `;
 
+        this.populateColumnDropdowns(fileInfo.column_names);
         this.showSection('fileInfoSection');
+    }
+
+    populateColumnDropdowns(columnNames) {
+        // Target column
+        const targetSelect = document.getElementById('targetColumn');
+        targetSelect.innerHTML = '';
+        columnNames.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            targetSelect.appendChild(opt);
+        });
+        // Serial column
+        const serialSelect = document.getElementById('serialColumn');
+        // Keep the first option as 'None'
+        serialSelect.innerHTML = '<option value="">None</option>';
+        columnNames.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            serialSelect.appendChild(opt);
+        });
+    }
+
+    displayNanStats(fileInfo) {
+        const nanStatsContent = document.getElementById('nanStatsContent');
+        if (!fileInfo) { nanStatsContent.innerHTML = ''; return; }
+        let html = '';
+        if (fileInfo.total_nan > 0) {
+            html = `<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle me-1"></i>
+                <strong>Warning:</strong> Your dataset contains <b>${fileInfo.total_nan.toLocaleString()}</b> missing values (NaN) in <b>${fileInfo.rows_with_nan.toLocaleString()}</b> rows.<br>
+                Choose how you want to handle them before preprocessing.</div>`;
+        } else {
+            html = `<div class="alert alert-success mb-0"><i class="fas fa-check-circle me-1"></i> No missing values detected in your dataset.</div>`;
+        }
+        nanStatsContent.innerHTML = html;
     }
 
     async handlePreprocessing() {
@@ -142,8 +180,14 @@ class DataPreprocessor {
         this.currentState = 'processing';
 
         try {
+            // Get user-selected NaN strategy
+            const nanStrategy = document.getElementById('nanStrategy')?.value || 'impute';
+            const targetColumn = document.getElementById('targetColumn')?.value || '';
+            const serialColumn = document.getElementById('serialColumn')?.value || '';
             const response = await fetch('/preprocess', {
-                method: 'POST'
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nan_strategy: nanStrategy, target_column: targetColumn, serial_column: serialColumn })
             });
 
             const result = await response.json();
@@ -174,6 +218,7 @@ class DataPreprocessor {
         
         // Display details
         this.displayDetails(result.summary);
+        this.displayNanWarning(result.summary.nan_stats);
         
         this.showSection('resultsSection');
     }
@@ -328,6 +373,28 @@ class DataPreprocessor {
         detailsHTML += '</div>';
         
         content.innerHTML = detailsHTML;
+    }
+
+    displayNanWarning(nanStats) {
+        const nanWarningContent = document.getElementById('nanWarningContent');
+        if (!nanStats) { nanWarningContent.innerHTML = ''; return; }
+        let html = '';
+        if (nanStats.nan_strategy === 'delete') {
+            if (nanStats.rows_dropped > 0) {
+                html = `<div class="alert alert-warning mb-0"><i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Note:</strong> <b>${nanStats.rows_dropped.toLocaleString()}</b> rows containing missing values were deleted during preprocessing.</div>`;
+            } else {
+                html = `<div class="alert alert-success mb-0"><i class="fas fa-check-circle me-1"></i> No rows were deleted. No missing values found.</div>`;
+            }
+        } else if (nanStats.nan_strategy === 'impute') {
+            if (nanStats.total_nan > 0) {
+                html = `<div class="alert alert-info mb-0"><i class="fas fa-info-circle me-1"></i>
+                    <strong>Note:</strong> <b>${nanStats.total_nan.toLocaleString()}</b> missing values were imputed (filled) during preprocessing.</div>`;
+            } else {
+                html = `<div class="alert alert-success mb-0"><i class="fas fa-check-circle me-1"></i> No missing values found. No imputation needed.</div>`;
+            }
+        }
+        nanWarningContent.innerHTML = html;
     }
 
     async handleDownload() {
