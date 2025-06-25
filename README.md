@@ -2,7 +2,7 @@
 
 ## System Workflow Diagram
 
-![System Workflow](static/sequence-diagram.png)
+![System Workflow](static/system-workflow.png)
 
 *Figure: End-to-end workflow of the Smart Data Preprocessor web application.*
 
@@ -115,7 +115,3 @@ Smart Data Preprocessor is a full-stack AI-powered web application that automate
 - For best results, ensure your CSV has clear column headers.
 - If you have a serial/ID column, select it so it is not altered during preprocessing.
 - If all rows have missing values, choose imputation or clean your data before upload.
-
----
-
-Preferred communication style: Simple, everyday language.
