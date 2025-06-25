@@ -94,16 +94,6 @@ Smart Data Preprocessor is a full-stack AI-powered web application that automate
 - **Bootstrap**: Responsive UI
 - **Font Awesome**: Icons
 
-## Deployment
-
-- **Runtime**: Python 3.11+
-- **Development**: Hot reload enabled
-- **Production**: Gunicorn WSGI server recommended
-- **File Storage**: `uploads/` for raw files, `processed/` for cleaned output
-
-## Changelog
-- June 2024: Major update with user-selectable NaN handling, target/serial column selection, and improved UI/UX.
-- June 2025: Initial setup (legacy)
 
 ## Usage Notes
 - For best results, ensure your CSV has clear column headers.
