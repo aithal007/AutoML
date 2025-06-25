@@ -1,11 +1,5 @@
 # Smart Data Preprocessor
 
-## System Workflow Diagram
-
-![System Workflow](static/system-workflow.png)
-
-*Figure: End-to-end workflow of the Smart Data Preprocessor web application.*
-
 ## How to Run This Product
 
 1. **Clone the repository:**
